@@ -83,7 +83,7 @@ boolean echoWrapped = false;
 
 //Var pt FUZZ
 int distortion = 0;
-unsigned int rand_signal;
+int d_sign = 1;
 
 
 LiquidCrystal_I2C lcd(0x3F, 16, 2);
@@ -120,7 +120,7 @@ const char * get_efect_name(int ef) {
             return "ECHO";
             break;
         case S_FUZZ:
-            return "FUZZ";
+            return "BUZZ";
             break;
         case S_RECORD:
             return "RECORD";
@@ -240,7 +240,7 @@ void loop() {
                 echoDelay = analogRead(0) * 30;
                 break;
             case FUZZ:
-                distortion = map(analogRead(0), 0, 1024, 100, 2048);
+                distortion = map(analogRead(0), 0, 1024, 0, 32);
                 break;
             default:
                 efect_lsit[selected_efect].value = map(-analogRead(POT), -1023, 0, 0, 8);
@@ -408,16 +408,9 @@ ISR(TIMER1_OVF_vect) {
             echo_evenCycle = !echo_evenCycle;
         }
         else if (efect_lsit[FUZZ].state) {
-            tmp = input;
-            tmp -= 2048;
-
-            if ( input  > distortion ) {
-                tmp = 2048;
-            } else if ( input < -distortion ){
-                tmp -= 2048;
-            }
-
-           tmp += 2048;
+           int aux = (d_sign * (input >> 6) * distortion);
+           tmp = input + aux;
+           d_sign *= -1;
         }
         output = tmp;
     }
